@@ -6,6 +6,7 @@ import { useFlexGenerator } from './composables/useFlexGenerator'
 import { PRESETS } from './types/flex'
 
 const currentTab = ref<'container' | 'items'>('container')
+const currentYear = new Date().getFullYear()
 const {
   settings,
   items,
@@ -104,7 +105,7 @@ const {
 
     <footer>
       <p>
-        © 2024 CSS Flex Generator |
+        © {{ currentYear }} CSS Flex Generator |
         <a href="https://codequest.work/" target="_blank" rel="noopener noreferrer">Created by CodeQuest</a> |
         <a href="https://codequest.work/generator/grid/" target="_blank" rel="noopener noreferrer">Grid Generator</a>
       </p>
