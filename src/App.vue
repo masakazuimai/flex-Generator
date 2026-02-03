@@ -1,112 +1,25 @@
 <script setup lang="ts">
-import { ref, computed, type CSSProperties } from 'vue'
+import { ref } from 'vue'
 import FlexSettings from './components/FlexSettings.vue'
 import FlexItemsSettings from './components/FlexItemsSettings.vue'
-import type { FlexSettings as FlexSettingsType, FlexItem } from './types/flex'
-import { defaultFlexSettings, createDefaultFlexItem } from './types/flex'
+import { useFlexGenerator } from './composables/useFlexGenerator'
+import { PRESETS } from './types/flex'
 
-// 状態
 const currentTab = ref<'container' | 'items'>('container')
-const flexSettings = ref<FlexSettingsType>({ ...defaultFlexSettings })
-const boxes = ref<FlexItem[]>([
-  createDefaultFlexItem(),
-  createDefaultFlexItem(),
-  createDefaultFlexItem()
-])
-const copySuccess = ref(false)
-
-// Flexコンテナのスタイル
-const flexContainerStyles = computed<CSSProperties>(() => ({
-  display: flexSettings.value.display,
-  flexDirection: flexSettings.value.flexDirection,
-  justifyContent: flexSettings.value.justifyContent,
-  alignItems: flexSettings.value.alignItems,
-  flexWrap: flexSettings.value.flexWrap,
-  gap: flexSettings.value.gap
-}))
-
-// 生成されるCSS
-const generatedCSS = computed(() => {
-  const containerCSS = `.parent {
-  display: ${flexSettings.value.display};
-  flex-direction: ${flexSettings.value.flexDirection};
-  justify-content: ${flexSettings.value.justifyContent};
-  align-items: ${flexSettings.value.alignItems};
-  flex-wrap: ${flexSettings.value.flexWrap};
-  gap: ${flexSettings.value.gap};
-}`
-
-  const itemsCSS = boxes.value
-    .map((box, index) => {
-      // デフォルト値と異なる場合のみ出力
-      if (box.order !== 0 || box.flex !== '0' || box.alignSelf !== 'auto') {
-        return `.parent .box:nth-child(${index + 1}) {
-  order: ${box.order};
-  flex: ${box.flex};
-  align-self: ${box.alignSelf};
-}`
-      }
-      return ''
-    })
-    .filter(Boolean)
-    .join('\n\n')
-
-  return itemsCSS ? `${containerCSS}\n\n${itemsCSS}` : containerCSS
-})
-
-// イベントハンドラー
-const updateSettings = (updates: Partial<FlexSettingsType>) => {
-  flexSettings.value = { ...flexSettings.value, ...updates }
-}
-
-const updateOrder = (index: number, value: number) => {
-  boxes.value = boxes.value.map((box, i) =>
-    i === index ? { ...box, order: value } : box
-  )
-}
-
-const updateAlignSelf = (index: number, value: FlexItem['alignSelf']) => {
-  boxes.value = boxes.value.map((box, i) =>
-    i === index ? { ...box, alignSelf: value } : box
-  )
-}
-
-const updateFlex = (index: number, value: string) => {
-  boxes.value = boxes.value.map((box, i) =>
-    i === index ? { ...box, flex: value } : box
-  )
-}
-
-const addBox = () => {
-  boxes.value = [...boxes.value, createDefaultFlexItem()]
-}
-
-const removeBox = () => {
-  if (boxes.value.length > 1) {
-    boxes.value = boxes.value.slice(0, -1)
-  }
-}
-
-const resetSettings = () => {
-  flexSettings.value = { ...defaultFlexSettings }
-  boxes.value = [
-    createDefaultFlexItem(),
-    createDefaultFlexItem(),
-    createDefaultFlexItem()
-  ]
-}
-
-const copyCSS = async () => {
-  try {
-    await navigator.clipboard.writeText(generatedCSS.value)
-    copySuccess.value = true
-    setTimeout(() => {
-      copySuccess.value = false
-    }, 2000)
-  } catch (error) {
-    // クリップボードへのコピー失敗時は何もしない
-  }
-}
+const {
+  settings,
+  items,
+  copySuccess,
+  containerStyles,
+  generatedCSS,
+  updateSettings,
+  updateItem,
+  addItem,
+  removeItem,
+  applyPreset,
+  reset,
+  copyCSS
+} = useFlexGenerator()
 </script>
 
 <template>
@@ -118,6 +31,20 @@ const copyCSS = async () => {
     <main>
       <section class="layout">
         <div class="settings">
+          <div class="presets">
+            <label>Presets:</label>
+            <div class="preset-buttons">
+              <button
+                v-for="preset in PRESETS"
+                :key="preset.name"
+                class="preset-btn"
+                @click="applyPreset(preset)"
+              >
+                {{ preset.name }}
+              </button>
+            </div>
+          </div>
+
           <div class="tabs">
             <button
               :class="['tab-button', { active: currentTab === 'container' }]"
@@ -136,18 +63,16 @@ const copyCSS = async () => {
           <div class="tab-content">
             <FlexSettings
               v-if="currentTab === 'container'"
-              :settings="flexSettings"
+              :settings="settings"
               @update-settings="updateSettings"
-              @add-box="addBox"
-              @remove-box="removeBox"
-              @reset="resetSettings"
+              @add-box="addItem"
+              @remove-box="removeItem"
+              @reset="reset"
             />
             <FlexItemsSettings
               v-if="currentTab === 'items'"
-              :boxes="boxes"
-              @update-order="updateOrder"
-              @update-align-self="updateAlignSelf"
-              @update-flex="updateFlex"
+              :boxes="items"
+              @update-item="updateItem"
             />
           </div>
         </div>
@@ -155,19 +80,12 @@ const copyCSS = async () => {
         <div class="preview-and-code">
           <div class="preview">
             <h2>Preview</h2>
-            <div
-              id="preview-box"
-              :style="flexContainerStyles"
-            >
+            <div id="preview-box" :style="containerStyles">
               <div
-                v-for="(box, index) in boxes"
+                v-for="(item, index) in items"
                 :key="index"
                 class="box"
-                :style="{
-                  order: box.order,
-                  alignSelf: box.alignSelf,
-                  flex: box.flex
-                }"
+                :style="{ order: item.order, alignSelf: item.alignSelf, flex: item.flex }"
               >
                 {{ index + 1 }}
               </div>
@@ -176,23 +94,9 @@ const copyCSS = async () => {
 
           <div class="code">
             <h2>Generated CSS</h2>
-            <textarea
-              readonly
-              class="code-output"
-              :value="generatedCSS"
-            />
-            <button
-              class="copy-btn"
-              @click="copyCSS"
-            >
-              Copy
-            </button>
-            <p
-              v-if="copySuccess"
-              class="copy-message"
-            >
-              Copied to clipboard!
-            </p>
+            <textarea readonly class="code-output" :value="generatedCSS" />
+            <button class="copy-btn" @click="copyCSS">Copy</button>
+            <p v-if="copySuccess" class="copy-message">Copied to clipboard!</p>
           </div>
         </div>
       </section>
@@ -201,17 +105,8 @@ const copyCSS = async () => {
     <footer>
       <p>
         © 2024 CSS Flex Generator |
-        <a
-          href="https://codequest.work/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Created by CodeQuest</a>
-        |
-        <a
-          href="https://codequest.work/generator/grid/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Grid Generator</a>
+        <a href="https://codequest.work/" target="_blank" rel="noopener noreferrer">Created by CodeQuest</a> |
+        <a href="https://codequest.work/generator/grid/" target="_blank" rel="noopener noreferrer">Grid Generator</a>
       </p>
     </footer>
   </div>
@@ -262,6 +157,42 @@ main {
   gap: 16px;
 }
 
+.presets {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.presets label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #333;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-btn {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f8f9fa;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preset-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
 .tabs {
   display: flex;
   gap: 8px;
@@ -290,7 +221,7 @@ main {
 }
 
 .tab-content {
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 360px);
   overflow-y: auto;
 }
 
@@ -337,21 +268,11 @@ main {
   transition: all 0.2s;
 }
 
-.box:nth-child(2) {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.box:nth-child(3) {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.box:nth-child(4) {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.box:nth-child(5) {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
+.box:nth-child(2) { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.box:nth-child(3) { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.box:nth-child(4) { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.box:nth-child(5) { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.box:nth-child(6) { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
 
 .code-output {
   width: 100%;

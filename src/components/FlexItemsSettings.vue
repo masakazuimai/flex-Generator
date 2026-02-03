@@ -1,76 +1,49 @@
 <script setup lang="ts">
 import type { FlexItem } from '../types/flex'
+import { ALIGN_SELF_OPTIONS, OPTION_LABELS } from '../types/flex'
 
-// Props
 defineProps<{
   boxes: FlexItem[]
 }>()
 
-// Emits
 const emit = defineEmits<{
-  updateOrder: [index: number, value: number]
-  updateAlignSelf: [index: number, value: FlexItem['alignSelf']]
-  updateFlex: [index: number, value: string]
+  updateItem: [index: number, updates: Partial<FlexItem>]
 }>()
 
-// 更新ハンドラー
-const handleOrderUpdate = (index: number, event: Event) => {
-  const value = parseInt((event.target as HTMLInputElement).value) || 0
-  emit('updateOrder', index, value)
+const updateOrder = (index: number, e: Event) => {
+  emit('updateItem', index, { order: parseInt((e.target as HTMLInputElement).value) || 0 })
 }
 
-const handleFlexUpdate = (index: number, event: Event) => {
-  const value = (event.target as HTMLInputElement).value
-  emit('updateFlex', index, value)
+const updateFlex = (index: number, e: Event) => {
+  emit('updateItem', index, { flex: (e.target as HTMLInputElement).value })
 }
 
-const handleAlignSelfUpdate = (index: number, event: Event) => {
-  const value = (event.target as HTMLSelectElement).value as FlexItem['alignSelf']
-  emit('updateAlignSelf', index, value)
+const updateAlignSelf = (index: number, e: Event) => {
+  emit('updateItem', index, { alignSelf: (e.target as HTMLSelectElement).value as FlexItem['alignSelf'] })
 }
 </script>
 
 <template>
   <div class="items-settings">
-    <div
-      v-for="(box, index) in boxes"
-      :key="index"
-      class="item-settings"
-    >
+    <div v-for="(box, index) in boxes" :key="index" class="item-settings">
       <h3>Item {{ index + 1 }}</h3>
 
       <label>
         Order:
-        <input
-          type="number"
-          :value="box.order"
-          @input="handleOrderUpdate(index, $event)"
-        />
+        <input type="number" :value="box.order" @input="updateOrder(index, $event)" />
       </label>
 
       <label>
         Flex:
-        <input
-          type="number"
-          step="1"
-          min="0"
-          :value="box.flex"
-          @input="handleFlexUpdate(index, $event)"
-        />
+        <input type="number" step="1" min="0" :value="box.flex" @input="updateFlex(index, $event)" />
       </label>
 
       <label>
         Align Self:
-        <select
-          :value="box.alignSelf"
-          @change="handleAlignSelfUpdate(index, $event)"
-        >
-          <option value="auto">Auto</option>
-          <option value="flex-start">Flex Start</option>
-          <option value="flex-end">Flex End</option>
-          <option value="center">Center</option>
-          <option value="baseline">Baseline</option>
-          <option value="stretch">Stretch</option>
+        <select :value="box.alignSelf" @change="updateAlignSelf(index, $event)">
+          <option v-for="opt in ALIGN_SELF_OPTIONS" :key="opt" :value="opt">
+            {{ OPTION_LABELS[opt] }}
+          </option>
         </select>
       </label>
     </div>
