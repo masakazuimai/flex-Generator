@@ -1,26 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import FlexSettings from './components/FlexSettings.vue'
 import FlexItemsSettings from './components/FlexItemsSettings.vue'
 import { useFlexGenerator } from './composables/useFlexGenerator'
 import { PRESETS } from './types/flex'
 
-declare global {
-  interface Window {
-    adsbygoogle: unknown[]
-  }
-}
-
 const currentTab = ref<'container' | 'items'>('container')
 const currentYear = new Date().getFullYear()
-
-onMounted(() => {
-  try {
-    ;(window.adsbygoogle = window.adsbygoogle || []).push({})
-  } catch {
-    // AdSense未ロード時は無視
-  }
-})
 const {
   settings,
   items,
@@ -117,23 +103,6 @@ const {
       </section>
     </main>
 
-    <div class="ad-footer">
-      <ins class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-4871781946658288"
-        data-ad-slot="7493033745"
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      ></ins>
-    </div>
-
-    <footer>
-      <p>
-        © {{ currentYear }} CSS Flex Generator |
-        <a href="https://codequest.work/" target="_blank" rel="noopener noreferrer">Created by CodeQuest</a> |
-        <a href="https://codequest.work/generator/grid/" target="_blank" rel="noopener noreferrer">Grid Generator</a>
-      </p>
-    </footer>
   </div>
 </template>
 
@@ -337,31 +306,4 @@ main {
   font-weight: 500;
 }
 
-.ad-footer {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px 24px 0;
-  text-align: center;
-}
-
-footer {
-  background: #2c3e50;
-  padding: 16px;
-  text-align: center;
-}
-
-footer p {
-  margin: 0;
-  color: #bdc3c7;
-  font-size: 14px;
-}
-
-footer a {
-  color: #3498db;
-  text-decoration: none;
-}
-
-footer a:hover {
-  text-decoration: underline;
-}
 </style>
