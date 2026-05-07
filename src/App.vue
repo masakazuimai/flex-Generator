@@ -6,7 +6,6 @@ import { useFlexGenerator } from './composables/useFlexGenerator'
 import { PRESETS } from './types/flex'
 
 const currentTab = ref<'container' | 'items'>('container')
-const currentYear = new Date().getFullYear()
 const {
   settings,
   items,
