@@ -25,7 +25,7 @@ const {
 <template>
   <div id="app">
     <header>
-      <h1>CSS Flex Generator</h1>
+      <h1>CSS Flex Generator<span class="header-sub">Flexboxジェネレーター</span></h1>
     </header>
 
     <main>
@@ -122,6 +122,14 @@ header h1 {
   margin: 0;
   color: white;
   font-size: 1.75rem;
+}
+
+header h1 .header-sub {
+  display: block;
+  font-size: 0.5em;
+  font-weight: 300;
+  opacity: 0.8;
+  margin-top: 4px;
 }
 
 main {
