@@ -5,6 +5,9 @@ import FlexItemsSettings from './components/FlexItemsSettings.vue'
 import { useFlexGenerator } from './composables/useFlexGenerator'
 import { PRESETS } from './types/flex'
 
+// 英語ページ（/generator/flex/en/）かどうかをURLパスで判定
+const isEnglish = window.location.pathname.includes('/en/')
+
 const currentTab = ref<'container' | 'items'>('container')
 const {
   settings,
@@ -25,7 +28,7 @@ const {
 <template>
   <div id="app">
     <header>
-      <h1>CSS Flex Generator<span class="header-sub">Flexboxジェネレーター</span></h1>
+      <h1>CSS Flex Generator<span v-if="!isEnglish" class="header-sub">Flexboxジェネレーター</span></h1>
     </header>
 
     <main>
