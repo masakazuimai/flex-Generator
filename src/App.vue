@@ -28,6 +28,13 @@ const {
 <template>
   <div id="app">
     <header>
+      <nav class="lang-switch" aria-label="Language">
+        <a v-if="isEnglish" href="/generator/flex/" hreflang="ja">日本語</a>
+        <span v-else aria-current="true">日本語</span>
+        <span class="sep" aria-hidden="true">/</span>
+        <span v-if="isEnglish" aria-current="true">English</span>
+        <a v-else href="/generator/flex/en/" hreflang="en">English</a>
+      </nav>
       <h1>CSS Flex Generator<span v-if="!isEnglish" class="header-sub">Flexboxジェネレーター</span></h1>
     </header>
 
@@ -116,9 +123,38 @@ const {
 }
 
 header {
+  position: relative;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
   text-align: center;
+}
+
+.lang-switch {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.lang-switch a {
+  color: #fff;
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.lang-switch a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.lang-switch [aria-current] {
+  font-weight: 700;
+}
+
+.lang-switch .sep {
+  margin: 0 8px;
+  opacity: 0.6;
 }
 
 header h1 {
