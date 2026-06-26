@@ -11,7 +11,10 @@ export default defineConfig({
       input: {
         // 日本語ページ（/generator/flex/）と英語ページ（/generator/flex/en/）
         main: resolve(__dirname, 'index.html'),
-        en: resolve(__dirname, 'en/index.html')
+        en: resolve(__dirname, 'en/index.html'),
+        // 使い方・FAQ ページ（ツールTOPから分離）
+        howto: resolve(__dirname, 'howto.html'),
+        howtoEn: resolve(__dirname, 'en/howto.html')
       }
     }
   }
